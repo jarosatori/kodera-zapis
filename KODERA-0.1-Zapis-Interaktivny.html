@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KODERA 0.1 — Zapis rozhodnuti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --midnight: #0A0A14;
+  --obsidian: #12121F;
+  --surface: #1A1A2E;
+  --surface-light: #222238;
+  --violet: #8B5CF6;
+  --violet-glow: rgba(139, 92, 246, 0.3);
+  --green: #39FF14;
+  --green-dim: #2ECC0F;
+  --green-glow: rgba(57, 255, 20, 0.2);
+  --orange: #FF6B00;
+  --orange-glow: rgba(255, 107, 0, 0.3);
+  --steel: #8A8A9A;
+  --steel-light: #B0B0C0;
+  --white: #F0F0F5;
+  --code-bg: #0D0D18;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--midnight);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--midnight); }
+::-webkit-scrollbar-thumb { background: var(--violet); border-radius: 3px; }
+
+/* Grid background */
+.grid-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hero */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 50%, var(--violet-glow) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 30%, var(--green-glow) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, var(--orange-glow) 0%, transparent 40%);
+  animation: heroGlow 12s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+@keyframes heroGlow {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-3%, 2%) rotate(3deg); }
+}
+
+.hero-content { position: relative; z-index: 1; }
+
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.hero h1 .accent { color: var(--orange); }
+.hero h1 .cursor {
+  display: inline-block;
+  width: 4px;
+  height: 0.8em;
+  background: var(--green);
+  animation: blink 1s step-end infinite;
+  margin-left: 4px;
+  vertical-align: baseline;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.hero .subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: var(--steel-light);
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+}
+
+.hero .version-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem 1.2rem;
+  border: 1px solid var(--violet);
+  border-radius: 999px;
+  color: var(--violet);
+  background: rgba(139,92,246,0.1);
+  margin-bottom: 2rem;
+}
+
+.hero .meta-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--steel);
+}
+
+.hero .meta-line span { color: var(--green-dim); }
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--steel);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  animation: bounce 2s infinite;
+  z-index: 1;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+.scroll-indicator .arrow {
+  width: 20px;
+  height: 20px;
+  border-right: 2px solid var(--violet);
+  border-bottom: 2px solid var(--violet);
+  transform: rotate(45deg);
+}
+
+/* Navigation */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,20,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(139,92,246,0.15);
+  padding: 0.8rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nav-logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--orange);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--steel);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.nav a:hover, .nav a.active {
+  color: var(--white);
+  background: rgba(139,92,246,0.15);
+}
+
+/* Sections */
+.section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.section-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--green);
+  background: rgba(57,255,20,0.08);
+  border: 1px solid rgba(57,255,20,0.2);
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  color: var(--white);
+}
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--violet), var(--green), var(--orange));
+  margin: 4rem 0;
+  opacity: 0.3;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s;
+}
+
+.card:hover {
+  border-color: rgba(139,92,246,0.3);
+  box-shadow: 0 0 30px rgba(139,92,246,0.08);
+}
+
+.card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--orange);
+  margin-bottom: 0.8rem;
+}
+
+.card p, .card li {
+  font-size: 0.9rem;
+  color: var(--steel-light);
+  line-height: 1.7;
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.card ul li {
+  padding: 0.3rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.card ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.75rem;
+  width: 6px;
+  height: 6px;
+  background: var(--violet);
+  border-radius: 50%;
+}
+
+/* Code block */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid rgba(139,92,246,0.1);
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin: 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--steel-light);
+  overflow-x: auto;
+}
+
+.code-block .comment { color: var(--steel); }
+.code-block .keyword { color: var(--violet); }
+.code-block .string { color: var(--green); }
+.code-block .number { color: var(--orange); }
+
+/* Data Grid */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+/* Tables */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  border: 1px solid rgba(139,92,246,0.12);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+thead {
+  background: linear-gradient(135deg, var(--surface), var(--surface-light));
+}
+
+th {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--orange);
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(139,92,246,0.2);
+}
+
+td {
+  padding: 0.8rem 1rem;
+  color: var(--steel-light);
+  border-bottom: 1px solid rgba(139,92,246,0.06);
+}
+
+tr:hover td { background: rgba(139,92,246,0.04); }
+
+td.name {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* Stats */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--orange), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--steel);
+  margin-top: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Timeline */
+.timeline { margin: 1.5rem 0; }
+
+.timeline-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-left: 2px solid var(--surface-light);
+  margin-left: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+  transition: border-color 0.3s;
+}
+
+.timeline-item:hover { border-left-color: var(--violet); }
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 1.3rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--violet);
+  border: 2px solid var(--midnight);
+}
+
+.timeline-item.done::before { background: var(--green); }
+
+.timeline-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--green);
+  background: rgba(57,255,20,0.08);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  height: fit-content;
+}
+
+.timeline-content { flex: 1; }
+
+.timeline-task {
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 0.3rem;
+}
+
+.timeline-meta {
+  font-size: 0.8rem;
+  color: var(--steel);
+}
+
+.timeline-meta .who { color: var(--violet); }
+.timeline-meta .when { color: var(--orange); }
+
+/* Team cards */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.team-card {
+  background: var(--surface);
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+}
+
+.team-card:hover {
+  border-color: var(--violet);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139,92,246,0.15);
+}
+
+.team-card .role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.team-card .name-big {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 0.5rem;
+}
+
+.team-card .desc {
+  font-size: 0.85rem;
+  color: var(--steel);
+  line-height: 1.6;
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  margin: 0.15rem;
+}
+
+.tag-violet { background: rgba(139,92,246,0.15); color: var(--violet); }
+.tag-green { background: rgba(57,255,20,0.1); color: var(--green-dim); }
+.tag-orange { background: rgba(255,107,0,0.15); color: var(--orange); }
+
+/* Collapsible */
+.collapsible {
+  background: var(--surface);
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.collapsible-header {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.collapsible-header:hover { background: rgba(139,92,246,0.05); }
+
+.collapsible-header h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.collapsible-arrow {
+  color: var(--violet);
+  transition: transform 0.3s;
+  font-size: 1.2rem;
+}
+
+.collapsible.open .collapsible-arrow { transform: rotate(180deg); }
+
+.collapsible-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.collapsible.open .collapsible-body { max-height: 2000px; }
+
+.collapsible-body-inner {
+  padding: 0 1.5rem 1.5rem;
+  color: var(--steel-light);
+  font-size: 0.9rem;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 3rem 2rem;
+  font-size: 0.75rem;
+  color: var(--steel);
+  font-family: 'JetBrains Mono', monospace;
+  border-top: 1px solid rgba(139,92,246,0.1);
+}
+
+.footer .footer-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav { padding: 0.6rem 1rem; }
+  .section { padding: 2.5rem 1.2rem; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .team-grid { grid-template-columns: 1fr; }
+  .data-grid { grid-template-columns: 1fr; }
+}
+
+/* Fade in animation */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="version-badge">v0.1 // beta</div>
+    <h1>KOD<span class="accent">ERA</span><span class="cursor"></span></h1>
+    <p class="subtitle">Era stavitelov.</p>
+    <p class="meta-line">
+      <span>// </span>kompletny zapis rozhodnuti<br>
+      <span>// </span>datum: 10. april 2026<br>
+      <span>// </span>zdroj: 2x meeting transcript
+    </p>
+  </div>
+  <div class="scroll-indicator">
+    <span>scroll</span>
+    <div class="arrow"></div>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">KODERA_</div>
+  <a href="#koncept">Koncept</a>
+  <a href="#datum">Datum</a>
+  <a href="#program">Program</a>
+  <a href="#tim">Tim</a>
+  <a href="#financie">Financie</a>
+  <a href="#firma">Firma</a>
+  <a href="#tech">Tech</a>
+  <a href="#marketing">Marketing</a>
+  <a href="#nextsteps">Next Steps</a>
+  <a href="#vizia">Vizia</a>
+</nav>
+
+<!-- STATS -->
+<section class="section fade-in">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">100-120</div>
+      <div class="stat-label">ucastnikov</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">9-11.6</div>
+      <div class="stat-label">jun 2026</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~25k</div>
+      <div class="stat-label">budget EUR</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">8-10</div>
+      <div class="stat-label">speakerov</div>
+    </div>
+  </div>
+</section>
+
+<!-- 1. KONCEPT -->
+<section class="section fade-in" id="koncept">
+  <div class="section-header">
+    <span class="section-number">01</span>
+    <h2 class="section-title">Koncept & vizia</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Co je KODERA?</div>
+    <p>Prva slovenska konferencia zamerana na <strong style="color:var(--green)">vibe coding</strong> a buildovanie pomocou AI. Nazov je slovna hracka &mdash; "Koder" + "Era" = Era koderov, era stavitelov. Z kazdeho sa moze stat koder.</p>
+  </div>
+
+  <div class="data-grid">
+    <div class="card">
+      <div class="card-title">Preco teraz?</div>
+      <ul>
+        <li>Vibe coding meni spolocnost &mdash; nie je to len tech trend, je to paradigma shift</li>
+        <li>Siroka tema ovplyvnujuca vsetky segmenty trhu</li>
+        <li>Na Slovensku este nikto neobsadil tuto poziciu &mdash; ciel je "zapichnut vlajku" ako prvi</li>
+        <li>Porovnatelna dolezitost temy s Globsec-om</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">KODERA 0.1 &mdash; Beta verzia</div>
+      <ul>
+        <li>Pivot z velkej konferencie (400-500 ludi) na mensi format</li>
+        <li>Max 100-120 ucastnikov, intimny event</li>
+        <li>Upgradnuty format ME meetupu</li>
+        <li>Ziadne stanky, ziadni externi exhibitori</li>
+        <li>Velka konferencia planuje sa na jesen 2026</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cielova skupina</div>
+    <p>Siroka cielovka &mdash; <strong style="color:var(--orange)">nie len e-commerce alebo tech ludia</strong>:</p>
+    <ul>
+      <li>Vsetci, ktori pracuju s pocitacom a chcu si zlepsit pracu pomocou AI/vibe codingu</li>
+      <li>Podnikatelia, pravnici, obchodnici, lekari, marketeri, manazeri</li>
+      <li>Od uplnych zaciatocnikov po pokrocilych vibe koderov</li>
+      <li>Forma prezentacie je klucova &mdash; vysvetlit technicke koncepty pristupne (priklad: Harry Potter analogie z Raulovho eventu)</li>
+    </ul>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 2. DATUM -->
+<section class="section fade-in" id="datum">
+  <div class="section-header">
+    <span class="section-number">02</span>
+    <h2 class="section-title">Datum & miesto</h2>
+  </div>
+
+  <div class="data-grid">
+    <div class="card">
+      <div class="card-title">Termin</div>
+      <div class="code-block">
+        <span class="keyword">preferovany</span> = <span class="string">"9-11. jun 2026"</span><br>
+        <span class="comment">// tyzden po Forbes Festival (4. juna)</span><br><br>
+        <span class="keyword">alternativy</span> = [<span class="string">"28. maj"</span>, <span class="string">"30. maj"</span>, <span class="string">"6. jun"</span>]<br>
+        <span class="comment">// finalny datum = venue + deconflikt</span>
+      </div>
+      <p style="margin-top: 1rem;"><strong style="color:var(--orange)">Obmedzenia:</strong></p>
+      <ul>
+        <li>Forbes Festival: 4. jun (3500 ludi &mdash; nepriamy konflikt)</li>
+        <li>Alex Paprckova: off 7.-23. maj (Globsec)</li>
+        <li>Kaja Badarova: off 29.5 - 3.6</li>
+        <li>Jaro: predbezne 11.6 Dansko &mdash; lepsie 9. alebo 10.</li>
+        <li>Pracovny den preferovany (nie sobota)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Venue</div>
+      <ul>
+        <li><strong style="color:var(--white)">Bratislava</strong> &mdash; potvrdene mesto</li>
+        <li>Kapacita: ~120 ludi</li>
+        <li>Nie konferencny styl &mdash; skor prijemny priestor vhodny pre networking</li>
+        <li>Budget na venue: ~6 000 EUR</li>
+        <li>Kaja + Miska zodpovedne za hladanie</li>
+        <li><span class="tag tag-orange">PRIORITA</span> zaistit cim skor &mdash; klucovy blocker</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 3. PROGRAM -->
+<section class="section fade-in" id="program">
+  <div class="section-header">
+    <span class="section-number">03</span>
+    <h2 class="section-title">Program & speakers</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Format dna</div>
+    <ul>
+      <li>Celodenni event (rano do vecera)</li>
+      <li>8-10 speakerov sednaskami</li>
+      <li>2-3 workshopy (2-3 hodiny)</li>
+      <li>Networking priestor pocas celeho dna</li>
+      <li>Coffee breaks + vecera</li>
+      <li>Mozny livestream pre online ucastnikov</li>
+    </ul>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Meno</th>
+          <th>Kto je</th>
+          <th>Poznamka</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">Jaro Chrapko</td>
+          <td>Zakladatel Dedoles, ME</td>
+          <td><span class="tag tag-green">CO-ORGANIZER</span> speaker + workshop</td>
+        </tr>
+        <tr>
+          <td class="name">Raul Rodriguez</td>
+          <td>Vibe coding evangelist</td>
+          <td><span class="tag tag-green">CO-ORGANIZER</span> speaker + workshop</td>
+        </tr>
+        <tr>
+          <td class="name">Milos Kondela</td>
+          <td>Podnikatel</td>
+          <td><span class="tag tag-violet">POTENCIALNY</span></td>
+        </tr>
+        <tr>
+          <td class="name">Viktor Zeman</td>
+          <td>QualityUnit &mdash; LiveAgent, Post Affiliate Pro</td>
+          <td><span class="tag tag-violet">POTENCIALNY</span></td>
+        </tr>
+        <tr>
+          <td class="name">Pavol Neruda</td>
+          <td>Podnikatel</td>
+          <td><span class="tag tag-violet">POTENCIALNY</span></td>
+        </tr>
+        <tr>
+          <td class="name">Semelak</td>
+          <td>Podnikatel</td>
+          <td><span class="tag tag-violet">POTENCIALNY</span></td>
+        </tr>
+        <tr>
+          <td class="name">Mike Spirit</td>
+          <td>Podcaster, influencer</td>
+          <td>Hovori o AI/vibe codingu na Hero Hero</td>
+        </tr>
+        <tr>
+          <td class="name">Miso Pastier</td>
+          <td>Podnikatel</td>
+          <td><span class="tag tag-violet">POTENCIALNY</span></td>
+        </tr>
+        <tr>
+          <td class="name">Odejar</td>
+          <td>Podnikatel</td>
+          <td><span class="tag tag-violet">POTENCIALNY</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--steel); font-size:0.85rem; margin-top:1rem;">Budget na speakerov: ~3 000 EUR (niektori zadarmo &mdash; Jaro, Raul). Cim skor dohodnut kvoli dostupnosti.</p>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 4. TIM -->
+<section class="section fade-in" id="tim">
+  <div class="section-header">
+    <span class="section-number">04</span>
+    <h2 class="section-title">Projektovy tim</h2>
+  </div>
+
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="role">Co-founder // biznis</div>
+      <div class="name-big">Jaro Chrapko</div>
+      <div class="desc">Rozhodnutia, speakers, budget, marketing (IG, newsletter, LinkedIn)</div>
+    </div>
+    <div class="team-card">
+      <div class="role">Co-founder // biznis</div>
+      <div class="name-big">Raul Rodriguez</div>
+      <div class="desc">Rozhodnutia, speakers, budget, marketing (social, komunita), China objednavky</div>
+    </div>
+    <div class="team-card">
+      <div class="role">Project owner</div>
+      <div class="name-big">Kaja Badarova</div>
+      <div class="desc">Hlavna koordinacia, sledovanie taskov v Asane, venue search, timeline management</div>
+    </div>
+    <div class="team-card">
+      <div class="role">Oversight // guidance</div>
+      <div class="name-big">Alex Paprckova</div>
+      <div class="desc">Know-how z organizovania eventov, dohliadanie zhora. Obmedzena kapacita (Globsec maj). Dostupna do konca aprila, potom od konca maja.</div>
+    </div>
+    <div class="team-card">
+      <div class="role">Admin + komunikacia</div>
+      <div class="name-big">Michaela Hasakova</div>
+      <div class="desc">Odpisovanie ucastnikom, fakturacia, komunikacia, objednavky z Ciny, administrativa</div>
+    </div>
+    <div class="team-card">
+      <div class="role">Vibe coder // tech</div>
+      <div class="name-big">Kamil</div>
+      <div class="desc">Vsetko technicke: landing page, web, ticketing system, registracny system &mdash; vsetko vibe-coded</div>
+    </div>
+    <div class="team-card">
+      <div class="role">Backup (~10%)</div>
+      <div class="name-big">Dominika (Raulov tim)</div>
+      <div class="desc">Zaloha ak bude treba. Skusenosti z organizovania Dajana Rodriguez plesu (150 ludi). Momentalne vytazena.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 5. FINANCIE -->
+<section class="section fade-in" id="financie">
+  <div class="section-header">
+    <span class="section-number">05</span>
+    <h2 class="section-title">Financie & rozpocet</h2>
+  </div>
+
+  <div class="collapsible open">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <h3>Cennik listkov (navrh)</h3>
+      <span class="collapsible-arrow">&#9660;</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="collapsible-body-inner">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Typ</th><th>Cena (EUR)</th><th>Odhad ks</th><th>Trzba (EUR)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="name">Early Bird</td><td>147 &ndash; 169</td><td>30</td><td>~4 400 &ndash; 5 100</td></tr>
+              <tr><td class="name">Regular</td><td>197 &ndash; 199</td><td>70</td><td>~13 800 &ndash; 13 900</td></tr>
+              <tr><td class="name">Late Bird</td><td>247 &ndash; 249</td><td>30</td><td>~7 400 &ndash; 7 500</td></tr>
+              <tr><td class="name">Livestream</td><td>47</td><td>120</td><td>~5 600</td></tr>
+              <tr style="background:rgba(139,92,246,0.08);"><td class="name" style="color:var(--orange)">SPOLU</td><td></td><td>~250</td><td style="color:var(--green); font-weight:700;">~31 000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="color:var(--steel); font-size:0.8rem;">Firma je neplatca DPH &mdash; ceny su finalne. Platby cez Stripe.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="collapsible open">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <h3>Rozpocet nakladov</h3>
+      <span class="collapsible-arrow">&#9660;</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="collapsible-body-inner">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Polozka</th><th>Odhad (EUR)</th><th>Poznamka</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Venue</td><td>6 000</td><td>Bratislava, ~120 ludi</td></tr>
+              <tr><td>Food & Drinks</td><td>4 000 &ndash; 6 000</td><td>Coffee breaks + vecera</td></tr>
+              <tr><td>Speakers</td><td>3 000</td><td>Niektori zadarmo</td></tr>
+              <tr><td>Admin / ludia</td><td>3 500</td><td>Interny tim</td></tr>
+              <tr><td>Livestream produkcia</td><td>2 000 &ndash; 2 500</td><td>Jedna stage</td></tr>
+              <tr><td>Tlacoviny (vlajky, branding)</td><td>1 500</td><td>Z Ciny &mdash; lacnejsie</td></tr>
+              <tr><td>Stripe poplatky (~2%)</td><td>~600</td><td>Z trzieb</td></tr>
+              <tr><td>Ads (5%)</td><td>~1 250</td><td>Ak bude treba</td></tr>
+              <tr style="background:rgba(255,107,0,0.08);"><td class="name" style="color:var(--orange)">SPOLU</td><td style="color:var(--orange); font-weight:700;">~20 000 &ndash; 25 000</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row" style="margin-top:2rem;">
+    <div class="stat-card">
+      <div class="stat-value">~31k</div>
+      <div class="stat-label">odhadovane trzby</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~22k</div>
+      <div class="stat-label">odhadovane naklady</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~6-10k</div>
+      <div class="stat-label">odhadovany zisk</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">5-10k</div>
+      <div class="stat-label">mozni sponzori</div>
+    </div>
+  </div>
+  <p style="color:var(--steel); font-size:0.85rem; text-align:center; margin-top:1rem;">Nie je to "terno", ale primarny ciel je marketingovy vytlak, content a zapichnutie vlajky. Zisk posluzi ako seed budget na velku jesennu konferenciu.</p>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 6. FIRMA -->
+<section class="section fade-in" id="firma">
+  <div class="section-header">
+    <span class="section-number">06</span>
+    <h2 class="section-title">Pravna struktura</h2>
+  </div>
+
+  <div class="data-grid">
+    <div class="card">
+      <div class="card-title">Rozhodnutie o firme</div>
+      <ul>
+        <li><span class="tag tag-orange">POVODNY PLAN</span> Upcreate s.r.o. (Raulova firma, neplatca DPH)</li>
+        <li><span class="tag tag-green">FINALNE</span> Event pobezi cez Jarovu firmu (Berka alebo Isali s.r.o.)</li>
+        <li>Dovod: Rychlejsie, jednoduchsie &mdash; nova s.r.o. este nie je zalozena</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Nova spolocna firma</div>
+      <ul>
+        <li>Plan: Zalozit novu s.r.o. s podielom <strong style="color:var(--green)">50/50</strong> (Jaro + Raul)</li>
+        <li>V podmienkach: ustanovenie o prevode assetov na novu firmu</li>
+        <li>Bezna prax pri zakladani spolocnych projektov</li>
+        <li>Founders agreement potrebny</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 7. TECH -->
+<section class="section fade-in" id="tech">
+  <div class="section-header">
+    <span class="section-number">07</span>
+    <h2 class="section-title">Tech & principy</h2>
+  </div>
+
+  <div class="card" style="border-color: var(--green); background: rgba(57,255,20,0.03);">
+    <div class="card-title" style="color:var(--green);">// zakladny princip</div>
+    <div class="code-block">
+      <span class="keyword">const</span> principle = {<br>
+      &nbsp;&nbsp;rule: <span class="string">"Na KODERA evente nebude ani jedno SW riesenie, ktore nie je vibe-coded"</span>,<br>
+      &nbsp;&nbsp;reason: <span class="string">"Event je o vibe codingu, tak aj cela infrastruktura musi byt vibe-coded"</span>,<br>
+      &nbsp;&nbsp;type: <span class="string">"statement"</span><br>
+      }
+    </div>
+  </div>
+
+  <div class="data-grid">
+    <div class="card">
+      <div class="card-title">Technicke riesenia</div>
+      <ul>
+        <li><span class="tag tag-green">VIBE-CODED</span> Landing page / web (Kamil)</li>
+        <li><span class="tag tag-green">VIBE-CODED</span> Ticketing / registracny system (Kamil)</li>
+        <li><span class="tag tag-violet">EXISTUJUCI</span> Factory system (kopirovanie)</li>
+        <li><span class="tag tag-orange">EXTERNY</span> Stripe (platby)</li>
+        <li><span class="tag tag-orange">EXTERNY</span> Livestream dodavatel (~2 000 EUR)</li>
+        <li><span class="tag tag-green">VIBE-CODED</span> Nova emailova adresa pre event</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 8. MARKETING -->
+<section class="section fade-in" id="marketing">
+  <div class="section-header">
+    <span class="section-number">08</span>
+    <h2 class="section-title">Marketing & branding</h2>
+  </div>
+
+  <div class="data-grid">
+    <div class="card">
+      <div class="card-title">Strategia</div>
+      <p>Primarne organicky reach cez osobne brandy:</p>
+      <ul>
+        <li><strong style="color:var(--white)">Jaro:</strong> Instagram, newsletter, LinkedIn</li>
+        <li><strong style="color:var(--white)">Raul:</strong> Social sites, komunita, LinkedIn event</li>
+        <li>Spolocne nastavenie marketingovej strategie</li>
+        <li>Najprv organic push, potom podla feedbacku platene reklamy</li>
+        <li>Silny line-up speakerov = organicky pull</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Branding</div>
+      <ul>
+        <li><span class="tag tag-violet">BETA</span> Minimalny branding &mdash; vlajky z Ciny, branded mikrofony, zakladna grafika</li>
+        <li>Dizajn/visual uz existuje (Raul prezentoval)</li>
+        <li><span class="tag tag-orange">JESEN</span> Plny branding az na velku konferenciu</li>
+        <li>Tlac: Objednavky z Ciny (10x lacnejsie, dodanie 3 dni)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 9. NEXT STEPS -->
+<section class="section fade-in" id="nextsteps">
+  <div class="section-header">
+    <span class="section-number">09</span>
+    <h2 class="section-title">Next steps</h2>
+  </div>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <span class="timeline-num">#01</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Finalizovat datum eventu (9-11 jun)</div>
+        <div class="timeline-meta"><span class="who">Jaro + Raul</span> &bull; <span class="when">ASAP</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#02</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Najst a zarezervovat venue v BA (~120 ludi)</div>
+        <div class="timeline-meta"><span class="who">Kaja + Miska</span> &bull; <span class="when">Do konca aprila</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#03</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Oslovit a potvrdit speakerov</div>
+        <div class="timeline-meta"><span class="who">Jaro + Raul</span> &bull; <span class="when">ASAP (2 mes. pred)</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#04</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Upravit Asana projekt na mensiu verziu (beta)</div>
+        <div class="timeline-meta"><span class="who">Kaja + Kyrilla</span> &bull; <span class="when">Tento tyzden</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#05</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Postavit landing page + ticketing (vibe-coded)</div>
+        <div class="timeline-meta"><span class="who">Kamil</span> &bull; <span class="when">2-3 tyzdne</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#06</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Finalizovat budget + ceny listkov</div>
+        <div class="timeline-meta"><span class="who">Jaro + Raul</span> &bull; <span class="when">Tento tyzden</span></div>
+      </div>
+    </div>
+    <div class="timeline-item done">
+      <span class="timeline-num">#07</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Vytvorit WhatsApp skupinu</div>
+        <div class="timeline-meta"><span class="who">Kaja</span> &bull; <span class="when" style="color:var(--green)">HOTOVE</span></div>
+      </div>
+    </div>
+    <div class="timeline-item done">
+      <span class="timeline-num">#08</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Zalozit Google Drive zlozku s rozpoctom</div>
+        <div class="timeline-meta"><span class="who">Jaro</span> &bull; <span class="when" style="color:var(--green)">HOTOVE</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#09</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Pridat Raulov tim do Asany</div>
+        <div class="timeline-meta"><span class="who">Jaro</span> &bull; <span class="when">Tento tyzden</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#10</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Sync call &mdash; utorok 9:30</div>
+        <div class="timeline-meta"><span class="who">Vsetci</span> &bull; <span class="when">Buduci utorok</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#11</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Objednat branding materialy z Ciny</div>
+        <div class="timeline-meta"><span class="who">Miska + Raul</span> &bull; <span class="when">Maj</span></div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-num">#12</span>
+      <div class="timeline-content">
+        <div class="timeline-task">Zalozit novu s.r.o. 50/50</div>
+        <div class="timeline-meta"><span class="who">Jaro + Raul</span> &bull; <span class="when">Paralelne</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- 10. VIZIA -->
+<section class="section fade-in" id="vizia">
+  <div class="section-header">
+    <span class="section-number">10</span>
+    <h2 class="section-title">Dlhodoba vizia &mdash; KODERA 1.0</h2>
+  </div>
+
+  <div class="card" style="border-color: var(--orange); background: rgba(255,107,0,0.03);">
+    <div class="card-title" style="font-size:1.1rem;">Jesen 2026 &mdash; Velka konferencia</div>
+    <p>Beta event sluzi ako odrazovy mostik:</p>
+    <ul>
+      <li><strong style="color:var(--white)">Termin:</strong> September/Oktober 2026</li>
+      <li><strong style="color:var(--white)">Rozsah:</strong> 300-500 ucastnikov</li>
+      <li><strong style="color:var(--white)">Sponzori:</strong> Aktivne oslovovanie (desiatky tisic EUR)</li>
+      <li><strong style="color:var(--white)">Produkcia:</strong> Plna &mdash; stage, branding, food vendors, merch</li>
+      <li><strong style="color:var(--white)">Oznamenie:</strong> Na beta evente &mdash; listky za polovicnu cenu</li>
+      <li><strong style="color:var(--white)">Tim:</strong> Event manager s velkokonferencnymi skusenostami</li>
+      <li><strong style="color:var(--white)">Data:</strong> Z beta eventu zozbieranie feedbacku a contentu</li>
+    </ul>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">KODERA_</div>
+  <p>Interny dokument &bull; Spracovane z transkriptov 2 meetingov &bull; April 2026</p>
+  <p style="margin-top:0.5rem; color: rgba(138,138,154,0.5);">Vsetky rozhodnutia su predmetom dalsej finalizacie na planovanych sync calloch.</p>
+</footer>
+
+<script>
+// Collapsible
+function toggleCollapsible(header) {
+  const parent = header.parentElement;
+  parent.classList.toggle('open');
+}
+
+// Fade in on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Active nav link
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop - 100;
+    if (pageYOffset >= sectionTop) {
+      current = section.getAttribute('id');
+    }
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+
+</body>
+</html>
